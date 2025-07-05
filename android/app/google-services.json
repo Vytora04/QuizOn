@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "945753521233",
+    "project_id": "quizon-5e627",
+    "storage_bucket": "quizon-5e627.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:945753521233:android:fdfb126ec99d3484044c70",
+        "android_client_info": {
+          "package_name": "com.example.quizon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "945753521233-886bkk27om7khn2kurgosvus848782d6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCITfoYIdKu6HjL6EETTc4i1AbOYJnUDBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "945753521233-886bkk27om7khn2kurgosvus848782d6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

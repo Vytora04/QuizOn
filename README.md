@@ -1,18 +1,17 @@
-# QuizOn!
+# QuizOn
 
-**QuizOn** is a simple and modular Flutter quiz application.  
-This project is structured for easy extension, UI improvement, and integration with backend services (such as Firebase).
+A modular Flutter quiz app featuring Firebase authentication, registration, profile management, quiz gameplay, leaderboard, and clean code structure—ready for further extension.
 
 ---
 
 ## 🚀 Features
 
-- **Dummy login** (ready to upgrade to Firebase Auth)
-- **Home Screen**: navigate to quiz & leaderboard
-- **Quiz**: auto-progress questions, score calculation
-- **Leaderboard**: display top user scores (dummy, ready for backend)
-- **Modular UI** with reusable widgets
-- **Clean folder structure**: /models, /services, /widgets, /screens, /utils
+- **Firebase Auth**: Secure login and registration
+- **Profile Screen**: View and edit user profile
+- **Quiz Gameplay**: Automatic question progression and scoring
+- **Leaderboard**: Displays top user scores (Firebase-backed)
+- **Modular UI**: Reusable widgets and clean folder structure
+- **Easy Collaboration**: Extensible, well-organized codebase
 
 ---
 
@@ -21,11 +20,11 @@ This project is structured for easy extension, UI improvement, and integration w
 ```
 lib/
   models/         # Data models (User, Question, etc.)
-  services/       # Auth & DB Service (login, score, leaderboard logic)
-  screens/        # Each page (login, home, quiz, leaderboard, etc.)
-  widgets/        # Reusable widgets (question card, option button, etc.)
-  utils/          # Constants, helpers, theme
-assets/           # Images, icons (register in pubspec.yaml)
+  services/       # Auth, DB, and Firebase services
+  screens/        # App screens: login, register, profile, home, quiz, leaderboard
+  widgets/        # Reusable UI components
+  utils/          # Constants, helpers, themes
+assets/           # Images, icons (registered in pubspec.yaml)
 pubspec.yaml
 ```
 
@@ -33,62 +32,72 @@ pubspec.yaml
 
 ## 🛠️ Getting Started
 
-### 1. Install Dependencies
-```sh
-flutter pub get
-```
+1. **Install dependencies:**
+   ```sh
+   flutter pub get
+   ```
 
-### 2. Run on Emulator/Device
-```sh
-flutter run
-```
+2. **Firebase setup:**
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Add your Android/iOS/Web app to Firebase
+   - Download `google-services.json` (Android) or `GoogleService-Info.plist` (iOS) and place them in the respective directories
+   - Enable Email/Password authentication in Firebase Authentication
 
-### 3. Assets Structure
-Place images/icons in the `assets/` folder (e.g. `assets/images/logo.png`)  
-Make sure to register in `pubspec.yaml`:
-```yaml
-flutter:
-  assets:
-    - assets/images/
-```
+3. **Run the app:**
+   ```sh
+   flutter run
+   ```
 
----
-
-## 👤 Collaboration & Integration
-
-- All login and database logic is currently **dummy** (local, without backend).  
-  **Integrating backend (Firebase Auth/Firestore) only requires replacing the functions in `/services/`.**
-- Widgets and UI are modular—just swap in your data and logic.
-- File, folder, and model naming is consistent for easy merging and teamwork.
+4. **Assets:**
+   - Place images/icons in the `assets/` directory and register them in `pubspec.yaml`:
+     ```yaml
+     flutter:
+       assets:
+         - assets/images/
+     ```
 
 ---
 
-## 💡 TODO / Next Steps
+## 👤 Account Management
 
-- [ ] Integrate Firebase Auth (login, register, session)
-- [ ] Integrate Firestore for scores & leaderboard
-- [ ] Timer per question
-- [ ] Transition animations
-- [ ] Quiz category mode
-- [ ] UI/UX polish (theme, illustration, etc.)
-- [ ] Add automated tests
+- Register a new account via the app’s registration screen
+- Login with your credentials
+- View and edit your profile on the Profile screen
+
+---
+
+## 🤝 Collaboration & Integration
+
+- Authentication and user data are now handled with Firebase.
+- Quiz and leaderboard logic are easily extendable for categories, timers, and more.
+- Consistent file and folder naming for easy navigation and teamwork.
+
+---
+
+## 💡 Roadmap / TODO
+
+- [ ] Add quiz categories
+- [ ] Implement per-question timer
+- [ ] Add transition animations
+- [x] UI/UX polish and theming
+- [ ] Automated testing
 
 ---
 
 ## ✨ Development Tips
 
-- For better UI, use [Google Fonts](https://pub.dev/packages/google_fonts) and global ThemeData in main.dart.
-- Put new logic in services/ (not in UI).
-- Use widgets from widgets/ for a consistent and easily updatable UI.
-- Store constants in utils/constants.dart for easy access and modification.
+- Use [Google Fonts](https://pub.dev/packages/google_fonts) and ThemeData for UI polish.
+- Add new business logic in `services/`, not directly in UI.
+- Reuse widgets from `widgets/` for a consistent design.
+- Store constants in `utils/constants.dart` for easy updates.
 
 ---
 
 ## 📝 Credits
 
-- Starter structure by [Vytora04](https://github.com/Vytora04) & contributors.
-- Flutter & Dart ecosystem.
+- Starter project by [Vytora04](https://github.com/Vytora04) & contributors.
+- Built with Flutter, Dart, and Firebase.
 
 ---
 
-Feel free to fork, develop, and contribute! 🚀
+Feel free to fork, improve, and contribute! 🚀

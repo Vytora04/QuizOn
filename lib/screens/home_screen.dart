@@ -1,25 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
 import 'quiz_screen.dart';
 import 'leaderboard_screen.dart';
+import 'profile_screen.dart';
+import '../models/question.dart'; // Import to get categories from dummyQuestions
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget { // Changed to StatefulWidget
   final AuthService authService;
   const HomeScreen({super.key, required this.authService});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String? _selectedCategory; // State variable to hold the selected category
+
+  List<String> get _categories {
+    // Extract unique categories from dummyQuestions
+    final Set<String> categories = {};
+    for (var q in dummyQuestions) {
+      categories.add(q.category);
+    }
+    return ['Semua Kategori', ...categories.toList()]; // Add 'All Categories' option
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final name = authService.currentUser ?? 'Guest';
+    final String displayName = widget.authService.currentUser?.username ?? 'Guest';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('QuizOn!'),
+        title: Text(
+          'QuizOn!',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.settings),
             onPressed: () {
-              authService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (c) => ProfileScreen(authService: widget.authService),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () async {
+              await widget.authService.logout();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/login');
+              }
             },
           ),
         ],
@@ -46,8 +82,8 @@ class HomeScreen extends StatelessWidget {
                       ),
                       SizedBox(height: kSpacingM),
                       Text(
-                        'Halo, $name!',
-                        style: TextStyle(
+                        'Halo, $displayName!',
+                        style: GoogleFonts.poppins(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           color: Colors.grey.shade900,
@@ -56,10 +92,35 @@ class HomeScreen extends StatelessWidget {
                       SizedBox(height: kSpacingS),
                       Text(
                         'Selamat datang di QuizOn!',
-                        style: TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 16,
                           color: Colors.grey.shade700,
                         ),
+                      ),
+                      SizedBox(height: kSpacingL),
+                      // Category Dropdown
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Pilih Kategori',
+                          labelStyle: GoogleFonts.poppins(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(kRadiusM),
+                          ),
+                          prefixIcon: const Icon(Icons.category),
+                        ),
+                        value: _selectedCategory,
+                        hint: Text('Pilih Kategori Quiz', style: GoogleFonts.poppins()),
+                        items: _categories.map((String category) {
+                          return DropdownMenuItem<String>(
+                            value: category,
+                            child: Text(category, style: GoogleFonts.poppins()),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedCategory = newValue;
+                          });
+                        },
                       ),
                     ],
                   ),
@@ -79,14 +140,18 @@ class HomeScreen extends StatelessWidget {
                     elevation: kElevationM,
                   ),
                   onPressed: () {
+                    String? categoryToPass = _selectedCategory == 'Semua Kategori' || _selectedCategory == null
+                        ? null
+                        : _selectedCategory;
+
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (c) => QuizScreen()),
+                      MaterialPageRoute(builder: (c) => QuizScreen(authService: widget.authService, category: categoryToPass)),
                     );
                   },
                   child: Text(
                     'Mulai Quiz',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -105,12 +170,12 @@ class HomeScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (c) => LeaderboardScreen()),
+                      MaterialPageRoute(builder: (c) => LeaderboardScreen(authService: widget.authService)),
                     );
                   },
                   child: Text(
                     'Leaderboard',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -120,13 +185,20 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
+          String? categoryToPass = _selectedCategory == 'Semua Kategori' || _selectedCategory == null
+              ? null
+              : _selectedCategory;
+
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => QuizScreen()),
+            MaterialPageRoute(builder: (context) => QuizScreen(authService: widget.authService, category: categoryToPass)),
           );
         },
-        label: Text('Mulai Quiz'),
-        icon: Icon(Icons.play_arrow),
+        label: Text(
+          'Mulai Quiz',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        icon: const Icon(Icons.play_arrow),
         backgroundColor: kPrimaryColor,
         elevation: kElevationL,
       ),

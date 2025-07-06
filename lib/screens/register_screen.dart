@@ -1,22 +1,21 @@
+// screens/register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
-import 'home_screen.dart';
-import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   final AuthService authService;
-  const LoginScreen({super.key, required this.authService});
+  const RegisterScreen({super.key, required this.authService});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  // Use TextEditingControllers for better form management
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -25,10 +24,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _login() async {
+  Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -37,8 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Use controller text for login
-      bool success = await widget.authService.login(
+      final bool success = await widget.authService.register(
         _usernameController.text.trim(),
         _passwordController.text.trim(),
       );
@@ -46,25 +45,19 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
 
       if (success) {
-        // Clear controllers on successful login if desired
-        _usernameController.clear();
-        _passwordController.clear();
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(authService: widget.authService),
-          ),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Pendaftaran berhasil! Silakan masuk.')),
         );
+        Navigator.pop(context); 
       } else {
         setState(() {
-          _errorMessage = "Login failed. Invalid username or password.";
+          _errorMessage = 'Nama pengguna sudah ada. Silakan pilih yang lain.';
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = "An unexpected error occurred: ${e.toString()}";
+        _errorMessage = 'Terjadi kesalahan tak terduga: ${e.toString()}';
       });
     } finally {
       if (mounted) {
@@ -73,18 +66,17 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _navigateToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RegisterScreen(authService: widget.authService),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Daftar Akun', // 'Register Account'
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.indigo,
+        foregroundColor: Colors.white,
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -94,12 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: Center(
-          child: SingleChildScrollView( // Added SingleChildScrollView for better responsiveness on small screens
-            padding: const EdgeInsets.symmetric(horizontal: 32.0), // Added padding for the scroll view
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Card(
               elevation: 8,
-              margin: EdgeInsets.symmetric(horizontal: 0), // Margin moved to padding of SingleChildScrollView
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), // Rounded corners for card
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(28.0),
                 child: Form(
@@ -107,57 +98,82 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.quiz, size: 64, color: Colors.indigo),
-                      SizedBox(height: 16),
+                      Icon(Icons.person_add, size: 64, color: Colors.indigo),
+                      const SizedBox(height: 16),
                       Text(
-                        'QuizOn!',
+                        'Gabung QuizOn!', 
                         style: GoogleFonts.poppins(
-                          fontSize: 32,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
                           color: Colors.indigo,
                         ),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       TextFormField(
-                        controller: _usernameController, // Use controller
+                        controller: _usernameController,
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: 'Username', 
                           labelStyle: GoogleFonts.poppins(),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          prefixIcon: Icon(Icons.person),
+                          prefixIcon: const Icon(Icons.person),
                         ),
                         style: GoogleFonts.poppins(),
-                        // onChanged: (val) => username = val, // Removed, controller handles this
-                        validator: (val) =>
-                            val == null || val.isEmpty ? 'Username is required' : null,
-                      ),
-                      SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController, // Use controller
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          labelStyle: GoogleFonts.poppins(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(Icons.lock),
-                        ),
-                        style: GoogleFonts.poppins(),
-                        obscureText: true,
-                        // onChanged: (val) => password = val, // Removed, controller handles this
                         validator: (val) {
                           if (val == null || val.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (val.length < 6) {
-                            return 'Password must be at least 6 characters';
+                            return 'Silahkan isi Username'; 
                           }
                           return null;
                         },
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password', 
+                          labelStyle: GoogleFonts.poppins(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        style: GoogleFonts.poppins(),
+                        obscureText: true,
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
+                            return 'Silahkan isi Password'; 
+                          }
+                          if (val.length < 6) {
+                            return 'Password perlu setidaknya 6 karakter';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          labelStyle: GoogleFonts.poppins(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        style: GoogleFonts.poppins(),
+                        obscureText: true,
+                        validator: (val) {
+                          if (val == null || val.isEmpty) {
+                            return 'Silahkan isi Confirm password';
+                          }
+                          if (val != _passwordController.text) {
+                            return 'Passwords nya tidak cocok'; 
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
                       if (_errorMessage != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -181,17 +197,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: _isLoading
-                              ? null
-                              : () {
-                                  if (_formKey.currentState?.validate() ?? false) {
-                                    _login();
-                                  }
-                                },
+                          onPressed: _isLoading ? null : _register,
                           child: _isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
+                              ? const CircularProgressIndicator(color: Colors.white)
                               : Text(
-                                  'Login',
+                                  'Daftar', // 'Register'
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -199,11 +209,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       TextButton(
-                        onPressed: _isLoading ? null : _navigateToRegister,
+                        onPressed: _isLoading ? null : () => Navigator.pop(context),
                         child: Text(
-                          'Create new account',
+                          'Sudah punya akun? Masuk', 
                           style: GoogleFonts.poppins(),
                         ),
                       ),

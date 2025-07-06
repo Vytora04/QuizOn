@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../models/question.dart';
 import '../utils/constants.dart';
 import '../widgets/option_button.dart';
+import 'dart:math';
+import '../services/auth_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class QuizScreen extends StatefulWidget {
-  const QuizScreen({super.key});
+  final AuthService authService;
+  final String? category;
+  const QuizScreen({super.key, required this.authService, this.category});
 
   @override
   State<QuizScreen> createState() => _QuizScreenState();
@@ -16,14 +21,44 @@ class _QuizScreenState extends State<QuizScreen> {
   bool quizFinished = false;
   int? selectedOption;
 
+  List<Question> _quizQuestions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _generateRandomQuestions();
+  }
+
+  void _generateRandomQuestions() {
+    List<Question> availableQuestions;
+
+    if (widget.category != null) {
+      availableQuestions = dummyQuestions
+          .where((q) => q.category == widget.category)
+          .toList();
+    } else {
+      availableQuestions = List.from(dummyQuestions);
+    }
+
+    if (availableQuestions.length < 10) {
+      _quizQuestions = List.from(availableQuestions);
+    } else {
+      final random = Random();
+      _quizQuestions = (List.from(availableQuestions)..shuffle(random))
+          .take(10)
+          .toList()
+          .cast<Question>();
+    }
+  }
+
   void answerQuestion(int selected) {
     setState(() {
       selectedOption = selected;
-      if (selected == dummyQuestions[currentQuestion].correctAnswerIndex) {
+      if (selected == _quizQuestions[currentQuestion].correctAnswerIndex) {
         score++;
       }
       Future.delayed(Duration(milliseconds: 600), () {
-        if (currentQuestion < dummyQuestions.length - 1) {
+        if (currentQuestion < _quizQuestions.length - 1) {
           setState(() {
             currentQuestion++;
             selectedOption = null;
@@ -31,10 +66,26 @@ class _QuizScreenState extends State<QuizScreen> {
         } else {
           setState(() {
             quizFinished = true;
+            _saveScore();
           });
         }
       });
     });
+  }
+
+  Future<void> _saveScore() async {
+    final currentUser = widget.authService.currentUser;
+    if (currentUser != null) {
+      final bool updated = await widget.authService.updateUserHighScore(
+        currentUser.username,
+        score,
+      );
+      if (updated && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Skor tinggi baru Anda telah disimpan!')),
+        );
+      }
+    }
   }
 
   void restartQuiz() {
@@ -43,11 +94,25 @@ class _QuizScreenState extends State<QuizScreen> {
       score = 0;
       quizFinished = false;
       selectedOption = null;
+      _generateRandomQuestions();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_quizQuestions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text('QuizOn!')),
+        body: Center(
+          child: Text(
+            'Tidak ada pertanyaan untuk kategori ini.',
+            style: GoogleFonts.poppins(fontSize: 18, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
     if (quizFinished) {
       return Scaffold(
         appBar: AppBar(title: Text('QuizOn!')),
@@ -72,7 +137,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     SizedBox(height: kSpacingL),
                     Text(
                       'Quiz Selesai!',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey.shade900,
@@ -81,7 +146,7 @@ class _QuizScreenState extends State<QuizScreen> {
                     SizedBox(height: kSpacingM),
                     Text(
                       'Skor kamu:',
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 20,
                         color: Colors.grey.shade700,
                       ),
@@ -94,8 +159,8 @@ class _QuizScreenState extends State<QuizScreen> {
                         borderRadius: BorderRadius.circular(kRadiusM),
                       ),
                       child: Text(
-                        '$score / ${dummyQuestions.length}',
-                        style: TextStyle(
+                        '$score / ${_quizQuestions.length}',
+                        style: GoogleFonts.poppins(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -113,11 +178,12 @@ class _QuizScreenState extends State<QuizScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(kRadiusM),
                           ),
+                          elevation: kElevationM,
                         ),
                         onPressed: restartQuiz,
                         child: Text(
                           'Ulang Quiz',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -138,7 +204,7 @@ class _QuizScreenState extends State<QuizScreen> {
                         },
                         child: Text(
                           'Kembali ke Home',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -151,7 +217,7 @@ class _QuizScreenState extends State<QuizScreen> {
       );
     }
 
-    final q = dummyQuestions[currentQuestion];
+    final q = _quizQuestions[currentQuestion];
     return Scaffold(
       appBar: AppBar(
         title: Text('QuizOn!'),
@@ -165,7 +231,7 @@ class _QuizScreenState extends State<QuizScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Pertanyaan ${currentQuestion + 1} / ${dummyQuestions.length}',
+                'Pertanyaan ${currentQuestion + 1} / ${_quizQuestions.length}',
                 style: TextStyle(fontSize: 18, color: Colors.grey.shade700),
               ),
               SizedBox(height: kSpacingL),

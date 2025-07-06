@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:quizon/screens/register_screen.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 
@@ -14,60 +13,32 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  
-  bool _isLoading = false;
-  String? _errorMessage;
+  String username = '';
+  String password = '';
+  bool isLoading = false;
+  String? error;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
+  void _login() async {
     setState(() {
-      _isLoading = true;
-      _errorMessage = null;
+      isLoading = true;
+      error = null;
     });
-
-    try {
-      final user = await widget.authService.signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
+    bool success = await widget.authService.login(username, password);
+    if (!mounted) return;
+    setState(() => isLoading = false);
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              HomeScreen(authService: widget.authService),
+        ),
       );
-      
-      if (!mounted) return;
-      
-      if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomeScreen(authService: widget.authService),
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+    } else {
+      setState(() {
+        error = "Login gagal";
+      });
     }
-  }
-
-  void _navigateToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RegisterScreen(authService: widget.authService),
-      ),
-    );
   }
 
   @override
@@ -82,118 +53,99 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         child: Center(
-          child: SingleChildScrollView(
-            child: Card(
-              elevation: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              child: Padding(
-                padding: const EdgeInsets.all(28.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.quiz, size: 64, color: Colors.indigo),
-                      const SizedBox(height: 16),
-                      Text(
-                        'QuizOn!',
-                        style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo,
-                        ),
+          child: Card(
+            elevation: 8,
+            margin: EdgeInsets.symmetric(horizontal: 32),
+            child: Padding(
+              padding: const EdgeInsets.all(28.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.quiz, size: 64, color: Colors.indigo),
+                    SizedBox(height: 16),
+                    Text(
+                      'QuizOn!',
+                      style: GoogleFonts.poppins(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.indigo,
                       ),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          labelStyle: GoogleFonts.poppins(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: const Icon(Icons.email),
+                    ),
+                    SizedBox(height: 24),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        labelStyle: GoogleFonts.poppins(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        style: GoogleFonts.poppins(),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'Please enter your email';
-                          }
-                          if (!val.contains('@')) {
-                            return 'Please enter a valid email';
-                          }
-                          return null;
-                        },
+                        prefixIcon: Icon(Icons.person),
                       ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _passwordController,
-                        decoration: InputDecoration(
-                          labelText: 'Password',
-                          labelStyle: GoogleFonts.poppins(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: const Icon(Icons.lock),
+                      style: GoogleFonts.poppins(),
+                      onChanged: (val) => username = val,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Wajib diisi' : null,
+                    ),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: GoogleFonts.poppins(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        style: GoogleFonts.poppins(),
-                        obscureText: true,
-                        validator: (val) {
-                          if (val == null || val.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          if (val.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
+                        prefixIcon: Icon(Icons.lock),
                       ),
-                      const SizedBox(height: 24),
-                      if (_errorMessage != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            _errorMessage!,
-                            style: GoogleFonts.poppins(
-                              color: Colors.red,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.indigo,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _isLoading ? null : _login,
-                          child: _isLoading
-                              ? const CircularProgressIndicator(color: Colors.white)
-                              : Text(
-                                  'Login',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextButton(
-                        onPressed: _isLoading ? null : _navigateToRegister,
+                      style: GoogleFonts.poppins(),
+                      obscureText: true,
+                      onChanged: (val) => password = val,
+                      validator: (val) =>
+                          val == null || val.isEmpty ? 'Wajib diisi' : null,
+                    ),
+                    SizedBox(height: 24),
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
                         child: Text(
-                          'Create new account',
-                          style: GoogleFonts.poppins(),
+                          error!,
+                          style: GoogleFonts.poppins(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState?.validate() ?? false) {
+                                  _login();
+                                }
+                              },
+                        child: isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                'Login',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
